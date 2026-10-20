@@ -14,10 +14,21 @@ import Combine
 @MainActor
 class Home: UIViewController {
     
+    
+    @IBOutlet weak var firstViewCollectionView: UICollectionView!
     @IBOutlet weak var popularCollectionView: UICollectionView!
     @IBOutlet weak var topRatedCollectionView: UICollectionView!
     @IBOutlet weak var upComingCollectionView: UICollectionView!
     
+    @IBOutlet weak var pageControl: UIPageControl!
+    
+    
+    
+    // firstView
+    private var arrDataFirstView = [Movie]()
+    private var displayfirstView: [Movie] {
+        Array(arrDataFirstView.prefix(10))
+    }
     
     // Popular
     private var arrDataPopularMovie = [Movie]()
@@ -37,6 +48,10 @@ class Home: UIViewController {
         Array(arrDataUpComing.prefix(7))
     }
     
+    // page control
+    private var currentIndex = 0
+    private var timer: Timer?
+    
     private let viewModelPopular = ViewModelPopularMovies()  // Popular
     private let viewModelTopRated = ViewModelTopRated()  // Top Rated
     private let viewModelUpComing = ViewModelUpComing() // Up Coming
@@ -50,14 +65,12 @@ class Home: UIViewController {
         
         started()
         
-        //        Task {
-        //            let response: MovieResponse = try await ApiManager.shared.fetchData(from: .popularMovies(page: 1))
-        //            print("\(response.results.first?.title ?? "None! Marwan")")
-        //        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        startTimer()
         
         guard !hasLoadData else {return}
         hasLoadData = true
@@ -72,9 +85,17 @@ class Home: UIViewController {
         super.viewWillDisappear(animated)
         
         currentTask?.cancel()
+        timer?.invalidate()
     }
     
     func started() {
+        
+        firstViewCollectionView.delegate = self
+        firstViewCollectionView.dataSource = self
+        firstViewCollectionView.isPagingEnabled = true
+        pageControl.numberOfPages = 0
+        pageControl.currentPage = 0
+        
         popularCollectionView.delegate = self
         popularCollectionView.dataSource = self
         
@@ -85,8 +106,8 @@ class Home: UIViewController {
         upComingCollectionView.dataSource = self
         
         bindingPoplular() // Popular
-        bindingTopTated() // Top Rated
-        bindeingUpComing()
+        bindingTopRated() // Top Rated
+        bindeingUpComing() // Up Coming
     }
     
     // Bindeing For Popular CollectionView
@@ -113,14 +134,20 @@ class Home: UIViewController {
     }
     
     // Binding For Top Rated CollectionView
-    private func bindingTopTated() {
+    private func bindingTopRated() {
         
         // View Model Top Rated
         viewModelTopRated.$arrDataTopRated
             .receive(on: DispatchQueue.main)
             .sink { [weak self] topdata in
                 self?.arrDataTopRated = topdata
+                self?.arrDataFirstView = topdata
                 self?.topRatedCollectionView.reloadData()
+                self?.firstViewCollectionView.reloadData()
+                self?.currentIndex = 0
+                self?.pageControl.numberOfPages = self?.displayfirstView.count ?? 0
+                self?.pageControl.currentPage = 0
+                self?.startTimer()
             }
             .store(in: &cancelLabel)
         
@@ -187,14 +214,18 @@ class Home: UIViewController {
         }
         
     }
-
+    
+    
+    
 }
 
-// Collection View Functions
+// Mark: - Collection View Functions
 extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if collectionView == popularCollectionView{
+        if collectionView == firstViewCollectionView{
+            return displayfirstView.count
+        }else if collectionView == popularCollectionView{
             return disPlayDataPopularMovie.count
         } else if collectionView == topRatedCollectionView {
             return displayDataTopRatedMovie.count
@@ -205,7 +236,15 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if collectionView == popularCollectionView {
+        
+        if collectionView == firstViewCollectionView {
+            let itemfirstView = displayfirstView[indexPath.row]
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "firstview", for: indexPath) as? TopRatedHomeSelected else {return UICollectionViewCell()}
+            cell.setUp(itemfirstView)
+            return cell
+        }
+        
+        else if collectionView == popularCollectionView {
             let itemsPop = disPlayDataPopularMovie[indexPath.row]
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "popluarcell", for: indexPath) as? HomePopularCVCell else {return UICollectionViewCell()}
             cell.setUp(itemsPop)
@@ -231,7 +270,16 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
     
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 1
+        return collectionView == firstViewCollectionView ? 0 : 1
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if collectionView == firstViewCollectionView {
+            return collectionView.bounds.size
+        }
+        return (collectionViewLayout as? UICollectionViewFlowLayout)?.itemSize ?? CGSize(width: 120, height: 180)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -239,16 +287,77 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
         
         guard let vc = storyboard?.instantiateViewController(withIdentifier: "homeselected") as? HomeSeleted else {return}
         
-        if collectionView == popularCollectionView {
+        if collectionView == firstViewCollectionView {
+            vc.showData = displayfirstView[indexPath.row]
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        
+        else if collectionView == popularCollectionView {
             vc.showData = disPlayDataPopularMovie[indexPath.row]
             navigationController?.pushViewController(vc, animated: true)
-        } else if collectionView == topRatedCollectionView {
+        }
+        
+        else if collectionView == topRatedCollectionView {
             vc.showData = displayDataTopRatedMovie[indexPath.row]
             navigationController?.pushViewController(vc, animated: true)
-        } else if collectionView == upComingCollectionView {
+        }
+        
+        else if collectionView == upComingCollectionView {
             vc.showData = displayUpComing[indexPath.row]
             navigationController?.pushViewController(vc, animated: true)
         }
         
+    }
+}
+
+
+// Mark: - Page Control
+
+extension Home {
+    
+    private func startTimer() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(timeInterval: 3.0, target: self,
+                                     selector: #selector(nextTimer),
+                                     userInfo: nil, repeats: true)
+    }
+    
+    @objc
+    private func nextTimer() {
+        let count = displayfirstView.count
+        if count < 2 { return }
+        
+        currentIndex = currentIndex + 1
+        if currentIndex >= count { currentIndex = 0 }
+        
+        firstViewCollectionView.scrollToItem(at: IndexPath(item: currentIndex, section: 0),
+                                             at: .centeredHorizontally,
+                                             animated: true)
+        pageControl.currentPage = currentIndex
+        
+    }
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        guard scrollView === firstViewCollectionView else { return }
+        timer?.invalidate()
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        guard scrollView === firstViewCollectionView, !decelerate else { return }
+        syncPage(scrollView)
+        startTimer()
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        guard scrollView === firstViewCollectionView else { return }
+        syncPage(scrollView)
+        startTimer()
+    }
+    
+    private func syncPage(_ scrollView: UIScrollView) {
+        guard scrollView.bounds.width > 0 else { return }
+        let page = Int(round(scrollView.contentOffset.x / scrollView.bounds.width))
+        currentIndex = page
+        pageControl.currentPage = page
     }
 }

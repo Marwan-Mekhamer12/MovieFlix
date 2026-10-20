@@ -16,6 +16,7 @@ protocol ViewModelUpComingProtocol {
 class ViewModelUpComing: ViewModelUpComingProtocol {
     
     @Published var arrData = [Movie]()
+    @Published var filterData = [Movie]()
     @Published var isLoading = false
     @Published var message: String?
     
@@ -31,10 +32,24 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
         do {
             let response: MovieResponse = try await manager.fetchData(from: .upComingMovies(page: 1))
             self.arrData = response.results.map {$0.self}
+            self.filterData = arrData
             isLoading = false
         } catch {
             isLoading = false
             message = "Field to load data from View Model Up Coming: \(error.localizedDescription)"
+        }
+    }
+    
+    func indexPath(at index: Int) -> Movie {
+        return filterData[index]
+    }
+    
+    func filterQuery(with query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            filterData = arrData
+        } else {
+            filterData = arrData.filter {$0.title.localizedCaseInsensitiveContains(trimmed)}
         }
     }
 }

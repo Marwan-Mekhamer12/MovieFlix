@@ -13,6 +13,8 @@ class ShowMorePopular: UIViewController {
     
     @IBOutlet weak var showMorePopularCollectionView: UICollectionView!
     
+    private let searchController = UISearchController(searchResultsController: nil)
+    
     private var arrData = [Movie]()
     private var currentTask: Task<Void, Never>?
     private var viewModel = ViewModelPopularMovies()
@@ -48,12 +50,13 @@ class ShowMorePopular: UIViewController {
         showMorePopularCollectionView.delegate = self
         showMorePopularCollectionView.dataSource = self
         bindingShowMorePopular()
+        searrchBar()
         
     }
     
     private func bindingShowMorePopular() {
         
-        viewModel.$arrData
+        viewModel.$filterData
             .receive(on: DispatchQueue.main)
             .sink { [weak self] data in
                 self?.arrData = data
@@ -84,6 +87,7 @@ class ShowMorePopular: UIViewController {
     
 }
 
+// Mark: - Collection View
 
 extension ShowMorePopular: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
@@ -113,12 +117,30 @@ extension ShowMorePopular: UICollectionViewDelegate, UICollectionViewDataSource,
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
         
-        let items = arrData[indexPath.row]
+        let items = viewModel.indexPath(at: indexPath.row)
         
         if let vc = storyboard?.instantiateViewController(withIdentifier: "homeselected") as? HomeSeleted {
             vc.showData = items
             navigationController?.pushViewController(vc, animated: true)
         }
         
+    }
+}
+
+// Mark: - Search Controller
+
+extension ShowMorePopular: UISearchResultsUpdating {
+    
+     func updateSearchResults(for searchController: UISearchController) {
+        let query = searchController.searchBar.text ?? ""
+        viewModel.filterquery(with: query)
+    }
+    
+    private func searrchBar() {
+        navigationItem.searchController = searchController
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search..."
+        definesPresentationContext = true
     }
 }

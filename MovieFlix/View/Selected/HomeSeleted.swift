@@ -22,7 +22,8 @@ class HomeSeleted: UIViewController {
     @IBOutlet weak var castNamesLabel: UILabel!
     @IBOutlet weak var genresLabel: UILabel!
     
-    
+    var saveCast: String?
+    var saveDirector: String?
     
     private let viewModelDetails = ViewModelMovieDetail()
     private var arrData: MovieDetail?
@@ -31,7 +32,7 @@ class HomeSeleted: UIViewController {
     private var isDescriptionExpanded = false
     private var hasLoadData = false
     
-    
+    private var likeButton: UIBarButtonItem!
     
     var showData: Movie?
     
@@ -71,6 +72,10 @@ class HomeSeleted: UIViewController {
         descriptionLabel.numberOfLines = 2
         moreBtnDes.setTitle("see more", for: .normal)
         TrailerShapeBtn.layer.cornerRadius = 18
+        tabBarFavoriteButton()
+        
+        if let cast = saveCast, !cast.isEmpty { castNamesLabel.text = cast }
+        if let director = saveDirector, !director.isEmpty { directorNameLabel.text = director }
         
         currentTask = Task { [weak self] in
             await self?.loadImages()
@@ -78,6 +83,37 @@ class HomeSeleted: UIViewController {
         
         startRatingView.setRating(showData?.voteaverage ?? 0)
         
+    }
+    
+    private func tabBarFavoriteButton() {
+        likeButton = UIBarButtonItem(image: UIImage(systemName: "heart"),
+                                  style: .done, target: self,
+                                  action: #selector(favoriteButton))
+        likeButton.tintColor = .red
+        navigationItem.rightBarButtonItem = likeButton
+        updateHeartIcon()
+    }
+    
+    @objc
+    private func favoriteButton() {
+        guard let movie = showData else { return }
+
+        if FavoriteStore.shared.isFavorite(movie.id) {
+            FavoriteStore.shared.remove(movie.id)
+        } else {
+            
+            let cast = arrData?.credits.cast.prefix(15).map {$0.name}.joined(separator: ", ") ?? ""
+            let director = arrData?.director?.name ?? ""
+            
+            FavoriteStore.shared.add(movie.id, movie.title, movie.voteaverage,
+                                     movie.backdroppath, movie.overview, cast, director)
+        }
+        updateHeartIcon()
+    }
+
+    private func updateHeartIcon() {
+        let liked = FavoriteStore.shared.isFavorite(showData?.id ?? 0)
+        likeButton.image = UIImage(systemName: liked ? "heart.fill" : "heart")
     }
     
     private func bindeingMovieDetail() { // ✅ جديد - نادِها جوه started()

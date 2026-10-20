@@ -16,6 +16,7 @@ protocol ViewModelTopRatedProtocol {
 class ViewModelTopRated: ViewModelTopRatedProtocol{
     
     @Published var arrDataTopRated = [Movie]()
+    @Published var filterData = [Movie]()
     @Published var isLoad = false
     @Published var message: String?
     
@@ -31,10 +32,24 @@ class ViewModelTopRated: ViewModelTopRatedProtocol{
         do {
             let response: MovieResponse = try await manager.fetchData(from: .topRatedMovies(page: 1))
             self.arrDataTopRated = response.results.map {$0.self}
+            self.filterData = arrDataTopRated
             isLoad = false
         } catch {
             isLoad = false
             message = "Field to load image from View Model Top Rated: \(error.localizedDescription)"
+        }
+    }
+    
+    func indexPath(at index: Int) -> Movie {
+        return filterData[index]
+    }
+    
+    func filterQuery(with query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            filterData = arrDataTopRated
+        } else {
+            filterData = arrDataTopRated.filter {$0.title.localizedCaseInsensitiveContains(trimmed)}
         }
     }
 }

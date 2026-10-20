@@ -13,6 +13,8 @@ class ShowMoreUpComing: UIViewController {
     
     @IBOutlet weak var collectionView: UICollectionView!
     
+    private let searchController = UISearchController(searchResultsController: nil)
+    
     private let viewModel = ViewModelUpComing()
     private var arrData = [Movie]()
     private var currentTask: Task<Void, Never>?
@@ -49,14 +51,14 @@ class ShowMoreUpComing: UIViewController {
         
         collectionView.delegate = self
         collectionView.dataSource = self
-        
-        
         bindingAllUpComing()
+        searchBar()
+        
         
     }
     
     private func bindingAllUpComing() {
-        viewModel.$arrData
+        viewModel.$filterData
             .receive(on: DispatchQueue.main)
             .sink { [weak self] alldata in
                 self?.arrData = alldata
@@ -85,6 +87,7 @@ class ShowMoreUpComing: UIViewController {
 
 }
 
+// Mark: - Collection View
 
 extension ShowMoreUpComing: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
@@ -113,11 +116,30 @@ extension ShowMoreUpComing: UICollectionViewDelegate, UICollectionViewDataSource
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        let items = arrData[indexPath.row]
+        let items = viewModel.indexPath(at: indexPath.row)
         if let vc = storyboard?.instantiateViewController(withIdentifier: "homeselected") as? HomeSeleted {
             vc.showData = items
             navigationController?.pushViewController(vc, animated: true)
         }
+    }
+}
+
+// Mark: - SearchController
+
+extension ShowMoreUpComing: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        let query = searchController.searchBar.text ?? ""
+        viewModel.filterQuery(with: query)
+    }
+    
+    private func searchBar() {
+        navigationItem.searchController = searchController
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search..."
+        definesPresentationContext = true
+        
     }
     
     

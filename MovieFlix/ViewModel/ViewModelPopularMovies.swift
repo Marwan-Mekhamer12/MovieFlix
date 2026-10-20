@@ -21,6 +21,7 @@ protocol ViewModelPopularMoviesProtocol {
 class ViewModelPopularMovies: ViewModelPopularMoviesProtocol {
     
     @Published var arrData = [Movie]()
+    @Published var filterData = [Movie]()
     @Published var isLoad = false
     @Published var messageError: String?
     
@@ -38,10 +39,24 @@ class ViewModelPopularMovies: ViewModelPopularMoviesProtocol {
             
             let response: MovieResponse = try await manager.fetchData(from: .popularMovies(page: 1) )
             self.arrData = response.results.map {$0.self}
+            self.filterData = arrData
             self.isLoad = false
         } catch {
             isLoad = false
             messageError = "Field to load data from Pupluar \(error.localizedDescription)"
+        }
+    }
+    
+    func indexPath(at index: Int) -> Movie {
+        return filterData[index]
+    }
+    
+    func filterquery(with query: String) {
+        let trimming = query.trimmingCharacters(in: .whitespaces)
+        if trimming.isEmpty {
+            filterData = arrData
+        } else {
+            filterData = arrData.filter { $0.title.localizedCaseInsensitiveContains(trimming)}
         }
     }
     
