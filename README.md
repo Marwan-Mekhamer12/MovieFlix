@@ -1,4 +1,8 @@
 
+
+https://github.com/user-attachments/assets/78524565-af23-484b-859f-9ffe3f10a058
+
+
 # 🎬 MovieFlix
 
 A modern iOS movie browsing application built with **Swift** and **UIKit**, following the **MVVM** architecture, clean code principles, and efficient memory management.
