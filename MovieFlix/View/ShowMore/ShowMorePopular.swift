@@ -17,12 +17,12 @@ class ShowMorePopular: UIViewController {
     
     private var arrData = [Movie]()
     private var currentTask: Task<Void, Never>?
-    private var viewModel = ViewModelPopularMovies()
+    private var viewModel = ViewModelPopular()
     private var cancelLabel = Set<AnyCancellable>()
     private var hasLoading = false
     
     
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -83,8 +83,6 @@ class ShowMorePopular: UIViewController {
         present(alert, animated: true)
     }
     
-    
-    
 }
 
 // Mark: - Collection View
@@ -123,7 +121,12 @@ extension ShowMorePopular: UICollectionViewDelegate, UICollectionViewDataSource,
             vc.showData = items
             navigationController?.pushViewController(vc, animated: true)
         }
-        
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        Task { [weak self] in
+            await self?.viewModel.loadMoreIfNeeded(indexPath.row)
+        }
     }
 }
 
@@ -131,7 +134,7 @@ extension ShowMorePopular: UICollectionViewDelegate, UICollectionViewDataSource,
 
 extension ShowMorePopular: UISearchResultsUpdating {
     
-     func updateSearchResults(for searchController: UISearchController) {
+    func updateSearchResults(for searchController: UISearchController) {
         let query = searchController.searchBar.text ?? ""
         viewModel.filterquery(with: query)
     }

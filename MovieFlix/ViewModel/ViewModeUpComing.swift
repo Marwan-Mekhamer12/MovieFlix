@@ -10,6 +10,8 @@ import Combine
 
 protocol ViewModelUpComingProtocol {
     func loadingData() async
+    func FetchMoreIfNeeded(_ currentIndex: Int) async
+    func fetchNextPage() async
 }
 
 
@@ -20,25 +22,56 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
     @Published var isLoading = false
     @Published var message: String?
     
+    // Infinite Scroll
+    private var currentPage = 1
+    private var totalPages = 1
+    private var isFetching = false
+    private var isSearching = false
+    
     let manager: ApiManagerProtocol
     init(manager: ApiManagerProtocol = ApiManager()) {
         self.manager = manager
     }
-
+    
     func loadingData() async {
+        currentPage = 1
+        totalPages = 1
+        arrData = []
+        await fetchNextPage()
+        
+    }
+    
+    func FetchMoreIfNeeded(_ currentIndex: Int) async {
+        guard !isFetching, currentIndex >= filterData.count - 5 else {return}
+        await fetchNextPage()
+        
+    }
+    
+    func fetchNextPage() async {
+        guard !isSearching, currentPage <= totalPages else {return}
+        isFetching = true
+        defer {isFetching = false}
         isLoading = true
         message = nil
         
         do {
-            let response: MovieResponse = try await manager.fetchData(from: .upComingMovies(page: 1))
-            self.arrData = response.results.map {$0.self}
-            self.filterData = arrData
+            
+            let response: MovieResponse = try await manager.fetchData(from: .upComingMovies(page: currentPage))
+            arrData.append(contentsOf: response.results)
+            filterData = arrData
+            totalPages = response.total_pages
+            currentPage += 1
+            self.isLoading = false
+            
+        } catch is CancellationError {
             isLoading = false
+            
         } catch {
             isLoading = false
-            message = "Field to load data from View Model Up Coming: \(error.localizedDescription)"
+            message = "Field to Load Data from View Model UpComing: \(error.localizedDescription)"
         }
     }
+    
     
     func indexPath(at index: Int) -> Movie {
         return filterData[index]
@@ -46,10 +79,8 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
     
     func filterQuery(with query: String) {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty {
-            filterData = arrData
-        } else {
-            filterData = arrData.filter {$0.title.localizedCaseInsensitiveContains(trimmed)}
-        }
+        isSearching = !trimmed.isEmpty
+        filterData = isSearching
+        ? arrData.filter {$0.title.localizedStandardContains(trimmed)} : arrData
     }
 }

@@ -58,7 +58,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="FDW-JU-4wn">
-                                <rect key="frame" x="8" y="111" width="377" height="699"/>
+                                <rect key="frame" x="8" y="111" width="377" height="715"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="aY0-sZ-FcZ">
                                     <size key="itemSize" width="128" height="157"/>
@@ -96,10 +96,10 @@
                         <viewLayoutGuide key="safeArea" id="LSs-0y-L6A"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="LSs-0y-L6A" firstAttribute="trailing" secondItem="FDW-JU-4wn" secondAttribute="trailing" constant="8" id="5Ue-CY-Bxj"/>
-                            <constraint firstItem="FDW-JU-4wn" firstAttribute="leading" secondItem="LSs-0y-L6A" secondAttribute="leading" constant="8" id="SQJ-gG-zTH"/>
-                            <constraint firstItem="LSs-0y-L6A" firstAttribute="bottom" secondItem="FDW-JU-4wn" secondAttribute="bottom" constant="8" id="cya-tl-7hZ"/>
-                            <constraint firstItem="FDW-JU-4wn" firstAttribute="top" secondItem="LSs-0y-L6A" secondAttribute="top" constant="8" id="rQn-aX-wFt"/>
+                            <constraint firstItem="FDW-JU-4wn" firstAttribute="leading" secondItem="LSs-0y-L6A" secondAttribute="leading" constant="8" id="6g9-lN-dCU"/>
+                            <constraint firstItem="LSs-0y-L6A" firstAttribute="trailing" secondItem="FDW-JU-4wn" secondAttribute="trailing" constant="8" id="RcZ-pS-9ih"/>
+                            <constraint firstItem="FDW-JU-4wn" firstAttribute="top" secondItem="LSs-0y-L6A" secondAttribute="top" constant="8" id="lJE-I2-zYb"/>
+                            <constraint firstItem="FDW-JU-4wn" firstAttribute="bottom" secondItem="LSs-0y-L6A" secondAttribute="bottom" constant="8" id="tOu-qv-Dlx"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Popular" id="GVR-xk-kYu"/>

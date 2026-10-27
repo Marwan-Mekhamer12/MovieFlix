@@ -46,6 +46,7 @@ final class ApiManager: ApiManagerProtocol {
             guard (200...299).contains(httpResponse.statusCode) else {
                 throw ApiErrorHanding.badResponse(httpResponse.statusCode)
             }
+            
             do {
                 let decode = try JSONDecoder().decode(T.self, from: data)
                 return decode

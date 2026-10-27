@@ -122,6 +122,12 @@ extension ShowMoreUpComing: UICollectionViewDelegate, UICollectionViewDataSource
             navigationController?.pushViewController(vc, animated: true)
         }
     }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        Task { [weak self] in
+            await viewModel.FetchMoreIfNeeded(indexPath.row)
+        }
+    }
 }
 
 // Mark: - SearchController

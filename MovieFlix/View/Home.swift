@@ -52,7 +52,7 @@ class Home: UIViewController {
     private var currentIndex = 0
     private var timer: Timer?
     
-    private let viewModelPopular = ViewModelPopularMovies()  // Popular
+    private let viewModelPopular = ViewModelPopular()  // Popular
     private let viewModelTopRated = ViewModelTopRated()  // Top Rated
     private let viewModelUpComing = ViewModelUpComing() // Up Coming
     private var cancelLabel = Set<AnyCancellable>()  // Cancel Label
@@ -200,22 +200,20 @@ class Home: UIViewController {
         }
     }
     
-    // Action for show all Top Rated Data
+    // Action for show all TopRated Data
     @IBAction func moreTopRated(_ sender: UIButton) {
         if let vc = storyboard?.instantiateViewController(withIdentifier: "showmoretoprated") as? ShowMoreTopRated {
             navigationController?.pushViewController(vc, animated: true)
         }
     }
     
-    // Action for show all Up Coming Data
+    // Action for show all UpComing Data
     @IBAction func moreUpComing(_ sender: UIButton) {
         if let vc = storyboard?.instantiateViewController(withIdentifier: "showmoreupcoming") as? ShowMoreUpComing {
             navigationController?.pushViewController(vc, animated: true)
         }
         
     }
-    
-    
     
 }
 

@@ -117,6 +117,12 @@ extension ShowMoreTopRated: UICollectionViewDelegate, UICollectionViewDataSource
             navigationController?.pushViewController(vc, animated: true)
         }
     }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        Task { [weak self] in
+            await self?.viewModel.fetchMoreIfNeeded(indexPath.row)
+        }
+    }
 }
 
 // Mark: - SearchController
