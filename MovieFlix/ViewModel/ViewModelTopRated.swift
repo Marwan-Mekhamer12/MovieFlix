@@ -17,16 +17,16 @@ protocol ViewModelTopRatedProtocol {
 @MainActor
 class ViewModelTopRated: ViewModelTopRatedProtocol{
     
-    @Published var arrDataTopRated = [Movie]()
-    @Published var filterData = [Movie]()
-    @Published var isLoad = false
-    @Published var message: String?
+    @Published private(set) var arrDataTopRated = [Movie]()
+    @Published private(set) var filterData = [Movie]()
+    @Published private(set) var isLoad = false
+    @Published private(set) var message: String?
     
     // Infinite Scroll
-    private var currentPage = 1
-    private var totalPages = 1
-    private var isFetching = false
-    private var isSearching = false
+    private(set) var currentPage = 1
+    private(set) var totalPages = 1
+    private(set) var isFetching = false
+    private(set) var isSearching = false
     
     let manager: ApiManagerProtocol
     init(manager: ApiManagerProtocol = ApiManager()) {
@@ -36,7 +36,9 @@ class ViewModelTopRated: ViewModelTopRatedProtocol{
     func loadingData() async {
         currentPage = 1
         totalPages = 1
+        isSearching = false
         arrDataTopRated = []
+        filterData = []
         await fetchNextPage()
         
     }
@@ -50,21 +52,20 @@ class ViewModelTopRated: ViewModelTopRatedProtocol{
     func fetchNextPage() async {
         guard !isFetching, currentPage <= totalPages else {return}
         isFetching = true
-        defer {isFetching = false}
         isLoad = true
+        defer {isFetching = false; isLoad = false}
         message = nil
+        
         do {
             let response: MovieResponse = try await manager.fetchData(from: .topRatedMovies(page: currentPage))
             self.arrDataTopRated.append(contentsOf: response.results)
             self.filterData = arrDataTopRated
             self.totalPages = response.total_pages
             self.currentPage += 1
-            isLoad = false
-        } catch is CancellationError{
-            isLoad = false
             
+        } catch is CancellationError{
+            return
         } catch {
-            isLoad = false
             message = "Field to load image from View Model Top Rated: \(error.localizedDescription)"
         }
     }

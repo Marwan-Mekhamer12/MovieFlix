@@ -14,10 +14,6 @@ struct MovieResponse: Codable {
     let total_pages: Int
     let results: [Movie]
     
-    enum CondingKeys: String, CodingKey {
-        case page, results
-        case totalpages = "total_pages"
-    }
 }
 
 struct Movie: Codable {

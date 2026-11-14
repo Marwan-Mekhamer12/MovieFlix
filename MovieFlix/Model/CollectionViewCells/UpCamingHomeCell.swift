@@ -19,6 +19,7 @@ class UpCamingHomeCell: UICollectionViewCell {
         titleLabel?.text = items.title
         urlImage.image = nil
         urlImage.layer.cornerRadius = 18
+        currentTask?.cancel()
         
         guard let url = items.backdropURL else {return}
         

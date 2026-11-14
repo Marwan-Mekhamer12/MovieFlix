@@ -19,7 +19,7 @@ protocol ViewModelLibraryProtocol {
 
 class ViewModelLibrary: ViewModelLibraryProtocol {
     
-    @Published private var arrData = [FavoriteItems]()
+    @Published private(set) var arrData = [FavoriteItems]()
     @Published private(set) var filterData = [FavoriteItems]()
     private var query = ""
     

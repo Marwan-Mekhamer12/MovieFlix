@@ -19,9 +19,9 @@ class Home: UIViewController {
     @IBOutlet weak var popularCollectionView: UICollectionView!
     @IBOutlet weak var topRatedCollectionView: UICollectionView!
     @IBOutlet weak var upComingCollectionView: UICollectionView!
+    @IBOutlet weak var NowPlayingCollectionView: UICollectionView!
     
     @IBOutlet weak var pageControl: UIPageControl!
-    
     
     
     // firstView
@@ -42,19 +42,27 @@ class Home: UIViewController {
         Array(arrDataTopRated.prefix(7))
     }
     
-    // Up Caming
+    // UpCaming
     private var arrDataUpComing = [Movie]()
     private var displayUpComing: [Movie] {
         Array(arrDataUpComing.prefix(7))
+    }
+    
+    // NowPlayingMovies
+    private var arrDataNowPlaying = [Movie]()
+    private var disPlayDataNowPlaying: [Movie] {
+        Array(arrDataNowPlaying.prefix(7))
     }
     
     // page control
     private var currentIndex = 0
     private var timer: Timer?
     
+    // ViewModels
     private let viewModelPopular = ViewModelPopular()  // Popular
     private let viewModelTopRated = ViewModelTopRated()  // Top Rated
     private let viewModelUpComing = ViewModelUpComing() // Up Coming
+    private let viewModelNowPlaying = ViewModelNowPlayingMovies()
     private var cancelLabel = Set<AnyCancellable>()  // Cancel Label
     private var currentTask: Task<Void, Never>?  // Current Task
     private var hasLoadData = false  // has load data
@@ -78,6 +86,7 @@ class Home: UIViewController {
             await self?.viewModelPopular.loadingData()
             await self?.viewModelTopRated.loadingData()
             await self?.viewModelUpComing.loadingData()
+            await self?.viewModelNowPlaying.loadingData()
         }
     }
     
@@ -105,9 +114,13 @@ class Home: UIViewController {
         upComingCollectionView.delegate = self
         upComingCollectionView.dataSource = self
         
+        NowPlayingCollectionView.delegate = self
+        NowPlayingCollectionView.dataSource = self
+        
         bindingPoplular() // Popular
         bindingTopRated() // Top Rated
         bindeingUpComing() // Up Coming
+        bindingNowPlaying() // Now Playing
     }
     
     // Bindeing For Popular CollectionView
@@ -186,6 +199,29 @@ class Home: UIViewController {
             .store(in: &cancelLabel)
     }
     
+    // Binding For Now Playing Movies
+    private func bindingNowPlaying() {
+        // View Model Now Playing
+        viewModelNowPlaying.$arrData
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] arrData in
+                self?.arrDataNowPlaying = arrData
+                self?.NowPlayingCollectionView.reloadData()
+            }
+            .store(in: &cancelLabel)
+        
+        // Show Alert Now Playing
+        viewModelNowPlaying.$message
+            .receive(on: DispatchQueue.main)
+            .sink{[weak self] error in
+                if let error = error {
+                    self?.showAlert(message: error)
+                }
+            }
+            .store(in: &cancelLabel)
+        
+    }
+    
     // Show Alert
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
@@ -212,8 +248,14 @@ class Home: UIViewController {
         if let vc = storyboard?.instantiateViewController(withIdentifier: "showmoreupcoming") as? ShowMoreUpComing {
             navigationController?.pushViewController(vc, animated: true)
         }
-        
     }
+    
+    @IBAction func moreNowPlaying(_ sender: UIButton) {
+        if let vc = storyboard?.instantiateViewController(withIdentifier: "showmoreAllnowplaying") as? ShowMoreNowPlaying {
+            navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    
     
 }
 
@@ -229,6 +271,8 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
             return displayDataTopRatedMovie.count
         } else if collectionView == upComingCollectionView {
             return displayUpComing.count
+        } else if collectionView == NowPlayingCollectionView{
+            return disPlayDataNowPlaying.count
         }
         return 0
     }
@@ -260,6 +304,13 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
             let itemsUpComing = displayUpComing[indexPath.row]
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "upcominghomecell", for: indexPath) as? UpCamingHomeCell else {return UICollectionViewCell()}
             cell.setUp(items: itemsUpComing)
+            return cell
+        }
+        
+        else if collectionView == NowPlayingCollectionView {
+            let itemsNowPlaying = disPlayDataNowPlaying[indexPath.row]
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "nowplayingmovies", for: indexPath) as? NowPlayingMovies else {return UICollectionViewCell()}
+            cell.setUP(items: itemsNowPlaying)
             return cell
         }
         return UICollectionViewCell()
@@ -302,6 +353,11 @@ extension Home: UICollectionViewDelegate, UICollectionViewDataSource, UICollecti
         
         else if collectionView == upComingCollectionView {
             vc.showData = displayUpComing[indexPath.row]
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        
+        else if collectionView == NowPlayingCollectionView {
+            vc.showData = disPlayDataNowPlaying[indexPath.row]
             navigationController?.pushViewController(vc, animated: true)
         }
         

@@ -12,6 +12,7 @@ enum ApiErrorHanding: LocalizedError {
     case invalidURL(String)
     case badResponse(Int)
     case invalidDecoded(String)
+    case networkError(String)
     
     var errorDescription: String? {
         switch self {
@@ -21,6 +22,8 @@ enum ApiErrorHanding: LocalizedError {
             return "Bad server response \(code)"
         case .invalidDecoded(let error):
             return "Field to decoded data \(error)"
+        case .networkError(let error):
+            return "Networking Error: \(error)"
         }
     }
     

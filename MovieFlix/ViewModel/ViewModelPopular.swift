@@ -5,9 +5,6 @@
 //  Created by Marwan Mekhamer on 31/07/2026.
 //
 
-
-
-
 import Foundation
 import Combine
 
@@ -21,16 +18,16 @@ protocol ViewModelPopularMoviesProtocol {
 @MainActor
 class ViewModelPopular: ViewModelPopularMoviesProtocol {
     
-    @Published var arrData = [Movie]()
-    @Published var filterData = [Movie]()
-    @Published var isLoad = false
-    @Published var messageError: String?
+    @Published private(set) var arrData = [Movie]()
+    @Published private(set) var filterData = [Movie]()
+    @Published private(set) var isLoad = false
+    @Published private(set) var messageError: String?
     
     // Infinite Scroll
-    private var currentPage = 1
-    private var totalPages = 1
-    private var isFetching = false
-    private var isSearching = false
+    private(set) var currentPage = 1
+    private(set) var totalPages = 1
+    private(set) var isFetching = false
+    private(set) var isSearching = false
     
     
     
@@ -42,7 +39,9 @@ class ViewModelPopular: ViewModelPopularMoviesProtocol {
     func loadingData() async {
         currentPage = 1
         totalPages = 1
+        isSearching = false
         arrData = []
+        filterData = []
         await fetchNextPage()
     }
     
@@ -58,23 +57,20 @@ class ViewModelPopular: ViewModelPopularMoviesProtocol {
         
         guard !isFetching, currentPage <= totalPages else {return}
         isFetching = true
-        defer {isFetching = false}
         isLoad = true
+        defer {isFetching = false; isLoad = false}
         messageError = nil
         
         do {
-            
             let response: MovieResponse = try await manager.fetchData(from: .popularMovies(page: currentPage) )
             self.arrData.append(contentsOf: response.results)
             self.filterData = arrData
             self.totalPages = response.total_pages
             currentPage += 1
             
-            self.isLoad = false
         } catch is CancellationError {
-            isLoad = false
+            return
         } catch {
-            isLoad = false
             messageError = "Field to load data from Pupluar \(error.localizedDescription)"
         }
     }

@@ -14,19 +14,19 @@ protocol ViewModelUpComingProtocol {
     func fetchNextPage() async
 }
 
-
+@MainActor
 class ViewModelUpComing: ViewModelUpComingProtocol {
     
-    @Published var arrData = [Movie]()
-    @Published var filterData = [Movie]()
-    @Published var isLoading = false
-    @Published var message: String?
+    @Published private(set) var arrData = [Movie]()
+    @Published private(set) var filterData = [Movie]()
+    @Published private(set) var isLoading = false
+    @Published private(set) var message: String?
     
     // Infinite Scroll
-    private var currentPage = 1
-    private var totalPages = 1
-    private var isFetching = false
-    private var isSearching = false
+    private(set) var currentPage = 1
+    private(set) var totalPages = 1
+    private(set) var isFetching = false
+    private(set) var isSearching = false
     
     let manager: ApiManagerProtocol
     init(manager: ApiManagerProtocol = ApiManager()) {
@@ -36,22 +36,24 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
     func loadingData() async {
         currentPage = 1
         totalPages = 1
+        isSearching = false
         arrData = []
+        filterData = []
         await fetchNextPage()
         
     }
     
     func FetchMoreIfNeeded(_ currentIndex: Int) async {
-        guard !isFetching, currentIndex >= filterData.count - 5 else {return}
+        guard !isSearching, currentIndex >= filterData.count - 5 else {return}
         await fetchNextPage()
         
     }
     
     func fetchNextPage() async {
-        guard !isSearching, currentPage <= totalPages else {return}
+        guard !isFetching, currentPage <= totalPages else {return}
         isFetching = true
-        defer {isFetching = false}
         isLoading = true
+        defer {isFetching = false; isLoading = false}
         message = nil
         
         do {
@@ -61,13 +63,11 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
             filterData = arrData
             totalPages = response.total_pages
             currentPage += 1
-            self.isLoading = false
+            
             
         } catch is CancellationError {
-            isLoading = false
-            
+            return
         } catch {
-            isLoading = false
             message = "Field to Load Data from View Model UpComing: \(error.localizedDescription)"
         }
     }
