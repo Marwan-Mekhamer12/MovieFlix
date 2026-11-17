@@ -8,15 +8,10 @@
 import Foundation
 import Combine
 
-protocol ViewModelUpComingProtocol {
-    func loadingData() async
-    func FetchMoreIfNeeded(_ currentIndex: Int) async
-    func fetchNextPage() async
-}
 
 @MainActor
-class ViewModelUpComing: ViewModelUpComingProtocol {
-    
+class ViewModelUpComing: ViewModelProtocol {
+        
     @Published private(set) var arrData = [Movie]()
     @Published private(set) var filterData = [Movie]()
     @Published private(set) var isLoading = false
@@ -43,7 +38,7 @@ class ViewModelUpComing: ViewModelUpComingProtocol {
         
     }
     
-    func FetchMoreIfNeeded(_ currentIndex: Int) async {
+    func fetchedIfNeeded(_ currentIndex: Int) async {
         guard !isSearching, currentIndex >= filterData.count - 5 else {return}
         await fetchNextPage()
         

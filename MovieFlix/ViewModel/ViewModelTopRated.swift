@@ -8,14 +8,9 @@
 import Foundation
 import Combine
 
-protocol ViewModelTopRatedProtocol {
-    func loadingData() async
-    func fetchMoreIfNeeded(_ currentIndex: Int) async
-    func fetchNextPage() async
-}
 
 @MainActor
-class ViewModelTopRated: ViewModelTopRatedProtocol{
+class ViewModelTopRated: ViewModelProtocol{
     
     @Published private(set) var arrDataTopRated = [Movie]()
     @Published private(set) var filterData = [Movie]()
@@ -43,7 +38,7 @@ class ViewModelTopRated: ViewModelTopRatedProtocol{
         
     }
     
-    func fetchMoreIfNeeded(_ currentIndex: Int) async {
+    func fetchedIfNeeded(_ currentIndex: Int) async {
         guard !isSearching, currentIndex >= filterData.count - 5 else {return}
         await fetchNextPage()
         

@@ -69,7 +69,7 @@ final class ViewModelPopularTests: XCTestCase {
         
     }
     
-    // Test pages
+    // Pages test
     func test_fetchNextPage_appendsData_andIncrementsPage() async {
         mock.result = .success(makeResponse(title: ["A"], totalPages: 3))
         
@@ -79,5 +79,29 @@ final class ViewModelPopularTests: XCTestCase {
         XCTAssertEqual(mock.resultPages, [1, 2])
         XCTAssertEqual(sut.arrData.count, 2)
     }
-
+    
+    // Load more if needed test
+    func test_loadMore_nearEnd_fetchesNextPage() async {
+        let title = (0..<10).map {"M\($0)"}
+        mock.result = .success(makeResponse(title: title, totalPages: 2))
+        
+        await sut.loadingData()
+        await sut.loadMoreIfNeeded(9)
+        
+        XCTAssertEqual(mock.fetchCallCount, 2)
+    }
+    
+    // Filter test
+    func test_FilterMovie() async {
+        mock.result = .success(makeResponse(title: ["Batman", "Superman",
+                                                    "Spiderman", "Ironman"]))
+        
+        await sut.loadingData()
+        sut.filterquery(with: "Bat")
+        
+        XCTAssertEqual(mock.fetchCallCount, 1)
+        XCTAssertEqual(sut.filterData.count, 1)
+        XCTAssertEqual(sut.filterData.first?.title, "Batman")
+    }
+    
 }

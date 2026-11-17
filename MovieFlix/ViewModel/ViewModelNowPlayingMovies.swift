@@ -8,14 +8,9 @@
 import Foundation
 import Combine
 
-protocol ViewModelNowPlayingMoviesProtocol {
-    func loadingData() async
-    func fetchedIfNeeded(_ currentIndex: Int) async
-    func fetchNextPage() async
-}
 
 @MainActor
-class ViewModelNowPlayingMovies: ViewModelNowPlayingMoviesProtocol {
+class ViewModelNowPlayingMovies: ViewModelProtocol {
     
     @Published private(set) var arrData = [Movie]()
     @Published private(set) var filterData = [Movie]()

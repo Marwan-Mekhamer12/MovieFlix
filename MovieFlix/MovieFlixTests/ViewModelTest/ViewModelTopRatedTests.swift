@@ -46,6 +46,7 @@ final class ViewModelTopRatedTests: XCTestCase {
     
     // MARK: - TopRated Test
     
+    // Success
     func test_loadingData_Success_ArrayCount() async {
         mock.result = .success(makeResponse(["A", "B", "C"]))
         await sut.loadingData()
@@ -54,11 +55,47 @@ final class ViewModelTopRatedTests: XCTestCase {
         XCTAssertNil(sut.message)
     }
     
+    // Fail
     func test_loadingData_Failure_ArrayCount() async {
         mock.result = .failure(URLError(.notConnectedToInternet))
         await sut.loadingData()
         XCTAssertNotEqual(sut.arrDataTopRated.count, 1)
         XCTAssertTrue(sut.arrDataTopRated.isEmpty)
         XCTAssertNotNil(sut.message)
+    }
+    
+    // Request pages test
+    func test_fetchNextPage_appendsData_andIncrementsPage() async {
+        mock.result = .success(makeResponse(["A"], 3))
+        
+        await sut.fetchNextPage()
+        await sut.fetchNextPage()
+        await sut.fetchNextPage()
+        
+        XCTAssertEqual(mock.resultPages, [1, 2, 3])
+        XCTAssertEqual(sut.arrDataTopRated.count, 3)
+    }
+    
+    // Load more if needed test
+    func test_loadMore_nearEnd_fetchesNextPage() async {
+        let title = (0..<10).map {"M\($0)"}
+        mock.result = .success(makeResponse(title, 2))
+        
+        await sut.loadingData()
+        await sut.fetchMoreIfNeeded(9)
+        
+        XCTAssertEqual(mock.fetchCallCount, 2)
+    }
+    
+    // Filter test
+    func test_FilterMovie() async {
+        mock.result = .success(makeResponse(["Superman", "Batman", "Hulk"]))
+        
+        await sut.loadingData()
+        sut.filterQuery(with: "Hu")
+        
+        XCTAssertEqual(mock.fetchCallCount, 1)
+        XCTAssertEqual(sut.filterData.count, 1)
+        XCTAssertEqual(sut.filterData.first?.title, "Hulk")
     }
 }

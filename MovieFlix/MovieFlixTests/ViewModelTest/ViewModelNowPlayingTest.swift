@@ -44,7 +44,7 @@ final class ViewModelNowPlayingTest: XCTestCase {
         title.enumerated().map {makeMoviesHelp($0.offset, $0.element)}
     }
     
-    private func makeResponse(_ title: [String], totalPages: Int = 1) -> MovieResponse {
+    private func makeResponse(_ title: [String],_ totalPages: Int = 1) -> MovieResponse {
         MovieResponse(page: 1, total_pages: totalPages,
                       results: makeMovies(title))
     }
@@ -70,5 +70,36 @@ final class ViewModelNowPlayingTest: XCTestCase {
     }
     
     // pages test
+    func test_fetchNextPage_appendsData_andIncrementsPage() async {
+        mock.result = .success(makeResponse(["A"], 4))
+        
+        await sut.fetchNextPage()
+        await sut.fetchNextPage()
+        
+        XCTAssertEqual(mock.resultPages, [1, 2])
+        XCTAssertEqual(sut.arrData.count, 2)
+    }
     
+    // Load more if needed test
+    func test_loadMore_nearEnd_fetchesNextPage() async {
+        let title = (0..<10).map {"M\($0)"}
+        mock.result = .success(makeResponse(title, 5))
+        
+        await sut.loadingData()
+        await sut.fetchedIfNeeded(9)
+        
+        XCTAssertEqual(mock.fetchCallCount, 2)
+    }
+    
+    // Filter test
+    func test_FilterMovies() async {
+        mock.result = .success(makeResponse(["Thor", "Avengers"]))
+        
+        await sut.loadingData()
+        sut.filterQuery(with: "xzxzxvvzxczcczxcz")
+        
+        XCTAssertEqual(mock.fetchCallCount, 1)
+        XCTAssertEqual(sut.filterData.count, 0)
+        XCTAssertNotEqual(sut.filterData.first?.title, "Thor")
+    }
 }

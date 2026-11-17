@@ -125,7 +125,7 @@ extension ShowMorePopular: UICollectionViewDelegate, UICollectionViewDataSource,
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         Task { [weak self] in
-            await self?.viewModel.loadMoreIfNeeded(indexPath.row)
+            await self?.viewModel.fetchedIfNeeded(indexPath.row)
         }
     }
 }
